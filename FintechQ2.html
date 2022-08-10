@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Fintech Assignment 1.2</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <script 
+        type="text/javascript" 
+        src="https://unpkg.com/bsv@1.5.3/bsv.min.js">
+    </script>
+    <script
+    type="text/javascript"
+    src="https://unpkg.com/bsv@1.5.3/bsv-mnemonic.min.js">
+</script>
+    <script 
+        type="text/javascript" 
+        src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js">
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+    button {
+        display: inline-block;
+        background-color: #0609b3;
+        border-radius: 10px;
+        border: 4px double #cccccc;
+        color: #eeeeee;
+        text-align: center;
+        font-size: 20px;
+        padding: 20px;
+        width: 300px;
+        transition: all 0.5s;
+        cursor: pointer;
+        margin: -150px;
+        position:absolute;
+    top: 50%;
+      }
+      button span {
+        cursor: pointer;
+        display: inline-block;
+        position: relative;
+        transition: 0.5s;
+      }
+      button span:after {
+        content: '\00bb';
+        position: absolute;
+        opacity: 0;
+        top: 0;
+        right: -20px;
+        transition: 0.5s;
+      }
+      button:hover {
+        background-color: #a4daf3;
+      }
+      button:hover span {
+        padding-right: 25px;
+      }
+      button:hover span:after {
+        opacity: 1;
+        right: 0;
+      }
+    </style>
+  </head>
+<body style= "background-image: url('C:\\Study\\Fintech\\AjarJaggedClumber-size_restricted.gif'); background-size: cover;">
+ <center>
+    <div id="Wallet" style = "color: white;" >
+        <br><br><br>
+      <div id="block1">
+           <h3>Your Public Key:</h3>
+           <p id="pubText"><b></b></p>
+      </div>
+      <div id="block2">
+           <h3>Your Address is:</h3> 
+           <p id="addressText"><b></b></p>
+      </div>
+      <div id="block3">
+           <h3>Your QR code:</h3>
+           <p id="qrcode"><b></b></p>
+      </div>
+      <div id="block4">
+        <h3>Balance :</h3>
+        <p id="balance"></p>
+      </div>
+    <div id="block5">
+      <h3>HD Private Key :</h3>
+      <p id="hdprivate"></p>
+  </div>
+  <div id="block6">
+    <h3>HD Public Key :</h3>
+    <p id="hdpublic"></p>
+</div>
+<div id="block7">
+  <h3>Derived Key :</h3>
+  <p id="derived"></p>
+</div>
+<div id="block8">
+<h3>Hardened Key :</h3>
+<p id="hardened"></p>
+</div>
+<div id="block9">
+  <h3>Mnemonic:</h3>
+  <p id="Mnemonic"></p>
+  </div>
+
+<div id="block10">
+    <h1>Private Key:</h1> 
+    <p id="privText"> </p>
+</div>
+
+<div id="block11">
+    <h1>Address:</h1> 
+    <p id="addressText1"> </p>
+</div>
+
+<div id="block12">
+    <h1>QR code:</h1>
+    <p id="qrcode1"></p>
+</div>
+    </div>
+    <button id="button" type="button" onclick="ShowWallet()">Enter the Wallet</button>
+</center>
+    <script>
+    $("#Wallet").hide();
+    var privKey = bsv.PrivateKey.fromRandom();
+    var pubKey = bsv.PublicKey.fromPrivateKey(privKey);
+    var address = bsv.Address.fromPublicKey(pubKey);
+
+    var z = document.querySelector("#pubText");
+    z.innerHTML = pubKey.toString();
+
+    var y = document.querySelector("#addressText");
+    y.innerHTML = address.toString();   
+
+    var addressCode = 'bitcoinsv:' + address;   
+    new QRCode(document.getElementById("qrcode"), addressCode);
+
+    function ShowWallet(){
+        $("#Wallet").show();
+        $("#button").hide();
+    }
+
+    var config = {
+    method: 'get',
+    url: "https://api.whatsonchain.com/v1/bsv/main/address/" +
+    address + "/balance",
+  };
+  
+    axios(config)
+    .then((response) => {
+      let data = JSON.stringify(response.data);
+      let p = document.getElementById("balance");
+      p.innerHTML = parseFloat(JSON.parse(data).confirmed);
+    })
+    
+    var hdPrivateKey = bsv.HDPrivateKey.fromRandom();
+    var hdPublicKey = bsv.HDPublicKey.fromHDPrivateKey(hdPrivateKey);
+ 
+    var hdpri = document.querySelector("#hdprivate");
+    hdpri.innerHTML = hdPrivateKey.toString();
+    
+    var hdpub = document.querySelector("#hdpublic");
+    hdpub.innerHTML = hdPublicKey.toString();
+
+
+    
+    var hdPrivateKey = bsv.HDPrivateKey.fromRandom();
+    
+    
+    var childPrivateKey = hdPrivateKey.deriveChild("m/44/0/0");
+    
+    
+    var hardenedPrivateKey = hdPrivateKey.deriveChild("m/44'/0'/0'");
+
+    var derived = document.querySelector("#derived");
+    derived.innerHTML = childPrivateKey.toString();
+    
+    var hardened = document.querySelector("#hardened");
+    hardened.innerHTML = hardenedPrivateKey.toString();
+    
+    var Mnemonic = window.bsvMnemonic;
+    var words = bsvMnemonic.fromRandom();
+    var hdPrivateKey = bsv.HDPrivateKey.fromSeed(words.toSeed())
+    var privateKey = hdPrivateKey.deriveChild("m/44'/0'/0'").privateKey;
+    var address = bsv.Address.fromPrivateKey(privateKey).toString();
+
+    var p = document.querySelector("#Mnemonic");
+    p.innerHTML = words.toString();
+    
+    var p = document.querySelector("#privText");
+    p.innerHTML = privateKey.toString();
+    
+    var y = document.querySelector("#addressText1");
+    y.innerHTML = address;
+    
+    var addressCode = 'bitcoinsv:' + address;
+    
+    new QRCode(document.getElementById("qrcode1"), addressCode);
+     </script>
+  </body>
+</html>
